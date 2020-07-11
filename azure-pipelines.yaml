@@ -26,4 +26,4 @@ steps:
   inputs:
     azureSubscription: 'ServiceConnection1'
     appType: functionAppLinux
-    appName: 'TimeTrackingFunctionApp'   
+    appName: 'TimeTrackingFunctionApp2'
