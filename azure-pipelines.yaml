@@ -24,6 +24,6 @@ steps:
     artifactName: 'drop'
 - task: AzureFunctionApp@1
   inputs:
-    azureSubscription: '4e56859c-5cb4-4fe0-b31b-cecbfb0a7451'
+    azureSubscription: 'ServiceConnection1'
     appType: functionAppLinux
     appName: 'Function App 1'   
