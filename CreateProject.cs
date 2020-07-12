@@ -46,7 +46,8 @@ namespace AbstractMechanics.TimeTracking.Function
         var validPayload = await GoogleJsonWebSignature.ValidateAsync(req.Headers["auth"]);
         string data = await req.ReadAsStringAsync();
         var projectCreationRequest = JsonConvert.DeserializeObject<ProjectDTO>(data);
-        return new OkObjectResult(InsertProject(cloudTable, validPayload.Email, projectCreationRequest));
+        await InsertProject(cloudTable, validPayload.Email, projectCreationRequest);
+        return new OkResult();
       }
       catch (InvalidJwtException ex)
       {
