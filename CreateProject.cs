@@ -7,46 +7,46 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using Google.Apis.Auth;
-using System.Linq;
 using Microsoft.Azure.Cosmos.Table;
-using System.Collections.Generic;
+using Google.Apis.Auth;
 
 namespace AbstractMechanics.TimeTracking.Function
 {
-  public static class ListProjects
+  public static class CreateProject
   {
-
-    public class ProjectResponseItem
+    public class ProjectDTO
     {
         public string Name { get; set; }
     }
 
-    private static async Task<List<ProjectResponseItem>> GetProjects(CloudTable cloudTable, string partitionKey) {
-        string pkFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey);
-        var query = new TableQuery().Where(pkFilter);
-        var projects = new List<ProjectResponseItem>();
-        TableContinuationToken token = null;
-        do {
-          var queryResults = await cloudTable.ExecuteQuerySegmentedAsync(query, token);
-          projects.AddRange(queryResults.Select(r => new ProjectResponseItem() { Name = r.RowKey }));
-          token = queryResults.ContinuationToken;
-        } while (token != null);
-        return projects;
+    public class ProjectCreationEntity : TableEntity {
+
     }
 
+    public static async Task<ProjectCreationEntity> InsertProject(CloudTable cloudTable, String partitionKey, ProjectDTO body)
+    {
+        var entity = new ProjectCreationEntity();
+        entity.PartitionKey = partitionKey;
+        entity.RowKey = body.Name;
+        var operation = TableOperation.InsertOrReplace(entity);
+        await cloudTable.ExecuteAsync(operation);
+        return entity;
+    }
 
-    [FunctionName("ListProjects")]
+    [FunctionName("CreateProject")]
     public static async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
         [Table("testTable")] CloudTable cloudTable,
         ILogger log)
     {
+
       if (!req.Headers.ContainsKey("auth")) return new BadRequestObjectResult("Missing auth header");
       try
       {
         var validPayload = await GoogleJsonWebSignature.ValidateAsync(req.Headers["auth"]);
-        return new OkObjectResult(GetProjects(cloudTable, validPayload.Email));
+        string data = await req.ReadAsStringAsync();
+        var projectCreationRequest = JsonConvert.DeserializeObject<ProjectDTO>(data);
+        return new OkObjectResult(InsertProject(cloudTable, validPayload.Email, projectCreationRequest));
       }
       catch (InvalidJwtException ex)
       {
