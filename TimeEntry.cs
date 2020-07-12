@@ -4,7 +4,7 @@ namespace AbstractMechanics.TimeTracking.Function
 {
     public class TimeEntry : TableEntity
     {
-      public int Amount { get; set; }
+      public double Amount { get; set; }
 
       public string Unit { get; set; }
 
