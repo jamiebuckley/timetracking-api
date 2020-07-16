@@ -1,8 +1,8 @@
 using System;
 
-namespace AbstractMechanics.TimeTracking.Function
+namespace AbstractMechanics.TimeTracking.Models.Dtos
 {
-  public class TimeEntryDTO
+  public class TimeEntryDto
   {
     public DateTime DateTime { get; set; }
 

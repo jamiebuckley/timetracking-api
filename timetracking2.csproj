@@ -2,6 +2,8 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <AzureFunctionsVersion>v3</AzureFunctionsVersion>
+    <AssemblyName>TimeTracking</AssemblyName>
+    <RootNamespace>AbstractMechanics.TimeTracking</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Google.Apis.Auth" Version="1.48.0" />

@@ -1,6 +1,6 @@
 using Microsoft.Azure.Cosmos.Table;
 
-namespace AbstractMechanics.TimeTracking.Function
+namespace AbstractMechanics.TimeTracking.Models
 {
     public class TimeEntry : TableEntity
     {
