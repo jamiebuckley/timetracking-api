@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using AbstractMechanics.TimeTracking.Models.Dtos;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -14,10 +15,6 @@ namespace AbstractMechanics.TimeTracking.Function
 {
   public static class DeleteProject
   {
-    public class DeleteProjectDto
-    {
-      public string Name { get; set; }
-    }
 
     public static async Task<TableResult> RemoveProject(CloudTable cloudTable, String partitionKey, DeleteProjectDto body)
     {
@@ -28,7 +25,7 @@ namespace AbstractMechanics.TimeTracking.Function
 
     [FunctionName("DeleteProject")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = null)] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "projects")] HttpRequest req,
         [Table("testTable")] CloudTable cloudTable,
         ILogger log)
     {

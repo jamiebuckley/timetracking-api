@@ -30,7 +30,7 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
 
     [FunctionName("CreateTimeEntry")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "timeEntries")] HttpRequest req,
         [Table("timeentries")] CloudTable cloudTable,
         ILogger log)
     {

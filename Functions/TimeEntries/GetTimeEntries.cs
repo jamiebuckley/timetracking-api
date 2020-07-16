@@ -17,17 +17,12 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
 {
   public static class GetTimeEntries
   {
-    public class TimeQueryDto
-    {
-      public DateTime FromTime { get; set; }
-      public DateTime ToTime { get; set; }
-    }
 
-    public static async Task<List<TimeEntryDto>> GetTimes(CloudTable cloudTable, string email, TimeQueryDto timeQueryDTO)
+    public static async Task<List<TimeEntryDto>> GetTimes(CloudTable cloudTable, string email, TimeQueryDto timeQueryDto)
     {
       string pkFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, email);
-      string rowFilterGt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, timeQueryDTO.FromTime.Ticks.ToString());
-      string rowFilterLt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, timeQueryDTO.ToTime.Ticks.ToString());
+      string rowFilterGt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, timeQueryDto.FromTime.Ticks.ToString());
+      string rowFilterLt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, timeQueryDto.ToTime.Ticks.ToString());
       var query = new TableQuery<TimeEntry>().Where(TableQuery.CombineFilters(pkFilter, TableOperators.And,  
       TableQuery.CombineFilters(rowFilterGt, TableOperators.And, rowFilterLt)));
       var timeEntries = new List<TimeEntryDto>();
@@ -53,7 +48,7 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
 
     [FunctionName("GetTimeEntries")]
     public static async Task<IActionResult> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post", Route = null)] HttpRequest req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "timeEntries")] HttpRequest req,
         [Table("timeentries")] CloudTable cloudTable,
         ILogger log)
     {
