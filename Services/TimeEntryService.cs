@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AbstractMechanics.TimeTracking.Models;
 using AbstractMechanics.TimeTracking.Models.Dtos;
 using Microsoft.Azure.Cosmos.Table;
+using Microsoft.Extensions.Primitives;
 
 namespace AbstractMechanics.TimeTracking.Services
 {
@@ -46,11 +47,12 @@ namespace AbstractMechanics.TimeTracking.Services
                 var queryResults = await _timeEntryTable.ExecuteQuerySegmentedAsync(query, token);
                 timeEntries.AddRange(queryResults.Select(r =>
                 {
-                    var dateTimeSection = r.RowKey.Split('_')[0];
-                    long.TryParse(dateTimeSection, out long dateTimeLong);
+                    var dateAndKey = r.RowKey.Split('_');
+                    long.TryParse(dateAndKey[0], out long dateTimeLong);
                     return new TimeEntryDto()
                     {
                         DateTime = new DateTime(dateTimeLong),
+                        Key = dateAndKey[1],
                         ProjectName = r.ProjectName,
                         Amount = r.Amount,
                         Unit = r.Unit,
@@ -59,6 +61,12 @@ namespace AbstractMechanics.TimeTracking.Services
                 token = queryResults.ContinuationToken;
             } while (token != null);
             return timeEntries;
+        }
+
+        public async Task<object> DeleteTimeEntry(string validPayloadEmail, DateTime time, StringValues keyId)
+        {
+            var operation = TableOperation.Delete(new TableEntity { PartitionKey = validPayloadEmail, RowKey = time.Ticks + "_" + keyId, ETag = "*" });
+            return await _timeEntryTable.ExecuteAsync(operation);
         }
     }
 }

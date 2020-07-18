@@ -4,6 +4,8 @@ namespace AbstractMechanics.TimeTracking.Models.Dtos
 {
   public class TimeEntryDto
   {
+    public string Key { get; set; }
+    
     public DateTime DateTime { get; set; }
 
     public string ProjectName { get; set; }
