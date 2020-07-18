@@ -23,7 +23,7 @@ namespace AbstractMechanics.TimeTracking.Services
             var entity = new TimeEntry
             {
                 PartitionKey = email,
-                RowKey = timeEntryDto.DateTime.Ticks.ToString(),
+                RowKey = timeEntryDto.DateTime.Ticks + "_" + Guid.NewGuid().ToString("n").Substring(0, 8),
                 Amount = timeEntryDto.Amount,
                 Unit = timeEntryDto.Unit,
                 ProjectName = timeEntryDto.ProjectName
@@ -46,7 +46,8 @@ namespace AbstractMechanics.TimeTracking.Services
                 var queryResults = await _timeEntryTable.ExecuteQuerySegmentedAsync(query, token);
                 timeEntries.AddRange(queryResults.Select(r =>
                 {
-                    long.TryParse(r.RowKey, out long dateTimeLong);
+                    var dateTimeSection = r.RowKey.Split('_')[0];
+                    long.TryParse(dateTimeSection, out long dateTimeLong);
                     return new TimeEntryDto()
                     {
                         DateTime = new DateTime(dateTimeLong),
