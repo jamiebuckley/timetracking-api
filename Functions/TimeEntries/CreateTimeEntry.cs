@@ -32,11 +32,7 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
         var validPayload = await GoogleJsonWebSignature.ValidateAsync(req.Headers["auth"]);
         string data = await req.ReadAsStringAsync();
         var timeEntryCreationRequest = JsonConvert.DeserializeObject<TimeEntryDto>(data);
-        try {
         await _timeEntryService.InsertEntry(validPayload.Email, timeEntryCreationRequest);
-        } catch (Exception ex) {
-            log.LogError(ex.ToString());
-        }
         return new OkResult();
       }
       catch (InvalidJwtException ex)

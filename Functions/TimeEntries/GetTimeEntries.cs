@@ -43,22 +43,14 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
         var startDate = DateTime.Parse(req.Query["startDate"]);
         var endDate = DateTime.Parse(req.Query["endDate"]);
         
-        try
-        {
-          var times = await _timeEntryService.GetTimes(validPayload.Email, startDate, endDate);
-          return new OkObjectResult(times);
-        }
-        catch (Exception ex)
-        {
-          log.LogError(ex.ToString());
-        }
+        var times = await _timeEntryService.GetTimes(validPayload.Email, startDate, endDate);
+        return new OkObjectResult(times);
       }
       catch (InvalidJwtException ex)
       {
         log.LogError(ex.ToString());
         return new UnauthorizedResult();
       }
-      return new BadRequestResult();
     }
   }
 }
