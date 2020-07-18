@@ -1,11 +1,10 @@
 using System;
 using System.Threading.Tasks;
-using AbstractMechanics.TimeTracking.Models;
 using AbstractMechanics.TimeTracking.Models.Dtos;
+using AbstractMechanics.TimeTracking.Services;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos.Table;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.Extensions.Logging;
@@ -13,25 +12,18 @@ using Newtonsoft.Json;
 
 namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
 {
-  public static class CreateTimeEntry
+  public class CreateTimeEntry
   {
+    private readonly TimeEntryService _timeEntryService;
 
-    public static async Task InsertEntry(CloudTable cloudTable, string email, TimeEntryDto timeEntryDTO)
+    public CreateTimeEntry(TimeEntryService timeEntryService)
     {
-      var entity = new TimeEntry();
-      entity.PartitionKey = email;
-      entity.RowKey = timeEntryDTO.DateTime.Ticks.ToString();
-      entity.Amount = timeEntryDTO.Amount;
-      entity.Unit = timeEntryDTO.Unit;
-      entity.ProjectName = timeEntryDTO.ProjectName;
-      var operation = TableOperation.InsertOrReplace(entity);
-      await cloudTable.ExecuteAsync(operation);
+      _timeEntryService = timeEntryService;
     }
 
     [FunctionName("CreateTimeEntry")]
-    public static async Task<IActionResult> Run(
+    public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "timeEntries")] HttpRequest req,
-        [Table("timeentries")] CloudTable cloudTable,
         ILogger log)
     {
       if (!req.Headers.ContainsKey("auth")) return new BadRequestObjectResult("Missing auth header");
@@ -41,7 +33,7 @@ namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
         string data = await req.ReadAsStringAsync();
         var timeEntryCreationRequest = JsonConvert.DeserializeObject<TimeEntryDto>(data);
         try {
-        await InsertEntry(cloudTable, validPayload.Email, timeEntryCreationRequest);
+        await _timeEntryService.InsertEntry(validPayload.Email, timeEntryCreationRequest);
         } catch (Exception ex) {
             log.LogError(ex.ToString());
         }

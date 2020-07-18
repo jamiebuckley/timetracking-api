@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AbstractMechanics.TimeTracking.Models;
 using AbstractMechanics.TimeTracking.Models.Dtos;
+using AbstractMechanics.TimeTracking.Services;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,52 +16,36 @@ using Newtonsoft.Json;
 
 namespace AbstractMechanics.TimeTracking.Functions.TimeEntries
 {
-  public static class GetTimeEntries
+  public class GetTimeEntries
   {
+    private readonly TimeEntryService _timeEntryService;
 
-    public static async Task<List<TimeEntryDto>> GetTimes(CloudTable cloudTable, string email, TimeQueryDto timeQueryDto)
+    public GetTimeEntries(TimeEntryService timeEntryService)
     {
-      string pkFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, email);
-      string rowFilterGt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.GreaterThanOrEqual, timeQueryDto.FromTime.Ticks.ToString());
-      string rowFilterLt = TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.LessThanOrEqual, timeQueryDto.ToTime.Ticks.ToString());
-      var query = new TableQuery<TimeEntry>().Where(TableQuery.CombineFilters(pkFilter, TableOperators.And,  
-      TableQuery.CombineFilters(rowFilterGt, TableOperators.And, rowFilterLt)));
-      var timeEntries = new List<TimeEntryDto>();
-      TableContinuationToken token = null;
-      do
-      {
-        var queryResults = await cloudTable.ExecuteQuerySegmentedAsync<TimeEntry>(query, token);
-        timeEntries.AddRange(queryResults.Select(r =>
-        {
-          long.TryParse(r.RowKey, out long dateTimeLong);
-          return new TimeEntryDto()
-          {
-            DateTime = new DateTime(dateTimeLong),
-            ProjectName = r.ProjectName,
-            Amount = r.Amount,
-            Unit = r.Unit,
-          };
-        }));
-        token = queryResults.ContinuationToken;
-      } while (token != null);
-      return timeEntries;
+      _timeEntryService = timeEntryService;
     }
 
     [FunctionName("GetTimeEntries")]
-    public static async Task<IActionResult> Run(
+    public async Task<IActionResult> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "timeEntries")] HttpRequest req,
-        [Table("timeentries")] CloudTable cloudTable,
         ILogger log)
     {
       if (!req.Headers.ContainsKey("auth")) return new BadRequestObjectResult("Missing auth header");
       try
       {
         var validPayload = await GoogleJsonWebSignature.ValidateAsync(req.Headers["auth"]);
-        string data = await req.ReadAsStringAsync();
-        var timeQueryDTO = JsonConvert.DeserializeObject<TimeQueryDto>(data);
+
+        if (!req.Query.ContainsKey("startDate") || !req.Query.ContainsKey("endDate"))
+        {
+          return new BadRequestObjectResult("Query params missing, must pass startDate and endDate");
+        }
+        
+        var startDate = DateTime.Parse(req.Query["startDate"]);
+        var endDate = DateTime.Parse(req.Query["endDate"]);
+        
         try
         {
-          var times = await GetTimes(cloudTable, validPayload.Email, timeQueryDTO);
+          var times = await _timeEntryService.GetTimes(validPayload.Email, startDate, endDate);
           return new OkObjectResult(times);
         }
         catch (Exception ex)
