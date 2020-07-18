@@ -19,12 +19,12 @@ namespace AbstractMechanics.TimeTracking.Services
         
         public async Task<List<ProjectDto>> GetProjects(string partitionKey) {
             string pkFilter = TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey);
-            var query = new TableQuery().Where(pkFilter);
+            var query = new TableQuery<Project>().Where(pkFilter);
             var projects = new List<ProjectDto>();
             TableContinuationToken token = null;
             do {
                 var queryResults = await _projectTable.ExecuteQuerySegmentedAsync(query, token);
-                projects.AddRange(queryResults.Select(r => new ProjectDto() { Name = r.RowKey }));
+                projects.AddRange(queryResults.Select(r => new ProjectDto() { Name = r.RowKey, Color = r.Color }));
                 token = queryResults.ContinuationToken;
             } while (token != null);
             return projects;
@@ -35,6 +35,7 @@ namespace AbstractMechanics.TimeTracking.Services
             var entity = new Project();
             entity.PartitionKey = partitionKey;
             entity.RowKey = body.Name;
+            entity.Color = body.Color;
             var operation = TableOperation.InsertOrReplace(entity);
             await _projectTable.ExecuteAsync(operation);
             return entity;
