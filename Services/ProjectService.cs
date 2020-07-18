@@ -39,5 +39,11 @@ namespace AbstractMechanics.TimeTracking.Services
             await _projectTable.ExecuteAsync(operation);
             return entity;
         }
+        
+        public async Task<TableResult> RemoveProject(String partitionKey, DeleteProjectDto body)
+        {
+            var operation = TableOperation.Delete(new TableEntity() { PartitionKey = partitionKey, RowKey = body.Name, ETag = "*" });
+            return await _projectTable.ExecuteAsync(operation);
+        }
     }
 }

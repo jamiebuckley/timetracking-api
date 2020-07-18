@@ -24,9 +24,9 @@ namespace AbstractMechanics.TimeTracking.Services
                 return await CloudTable.ExecuteQuerySegmentedAsync(query, token);
             }
             
-            public async Task ExecuteAsync(TableOperation operation)
+            public async Task<TableResult> ExecuteAsync(TableOperation operation)
             {
-                await CloudTable.ExecuteAsync(operation);
+                return await CloudTable.ExecuteAsync(operation);
             }
         }
         
